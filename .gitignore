@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local / private
+refs/
+save-recovery/
+*.log
+*.csv
+.DS_Store
+Thumbs.db
+
+# Never ship extracted game bytecode or player saves
+*.luac
+_orig/
+slot_*.lua
+global.lua
+settings.lua
+cache.lua
+
+# Editor
+.idea/
+.vscode/
+*.swp

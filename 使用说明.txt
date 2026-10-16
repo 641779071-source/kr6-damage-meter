@@ -1,0 +1,28 @@
+Kingdom Rush Genesis 伤害统计模组
+================================
+
+安装
+  1. 双击 install.bat，或：
+     python install.py --game-dir "D:\steam\steamapps\common\Kingdom Rush Genesis"
+  2. 完全退出游戏后重新启动
+
+使用
+  F8  开关右侧伤害面板
+  F9  导出 CSV 到存档目录
+  F10 清空本关统计
+
+  进入关卡后自动累计：塔类型 / 英雄 / 法术
+  换关时自动导出上一关 CSV
+
+文件位置
+  存档目录：%APPDATA%\kingdom_rush_genesis\
+  CSV：damage_*.csv
+  诊断：_kr6dmg_boot.txt / _kr6dmg_err.txt
+
+卸载
+  双击 uninstall.bat
+
+注意
+  - 不修改游戏安装目录
+  - 游戏更新后请重新运行安装
+  - 若同时用 kr6-trainer：本模组覆盖桩会顺带加载 trainer
