@@ -12,7 +12,6 @@
 
 - Windows（主要）或 macOS  
 - 已安装 [Python 3](https://www.python.org/)  
-- Steam 正版游戏  
 
 ## 安装
 
