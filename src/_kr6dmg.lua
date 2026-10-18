@@ -247,6 +247,28 @@ local FALLBACK_ZH = {
   aura_tree_attack_lvl4 = "异木守卫",
   stage_hazard = "关卡机制",
   aura_pillar_stage_09_damage = "关卡机制",
+  -- 旧版正则把 hero_stage_05_alleria 截成 hero_stage；完整 key 走官方 i18n
+  hero_stage = "关卡英雄",
+  hero_stage_05_alleria = "艾莉瑞雅",
+  hero_stage_15_lord_blackburn = "布莱克本领主",
+  hero_stage_18_denas = "迪纳斯王子",
+  -- 第16关树精盟友（无官方 TOWER_STAGE_16_* 键）
+  stage_16_treant_killer = "嗜杀树精",
+  stage_16_treant_attacker = "进攻树精",
+  stage_16_treant_healer = "治愈树精",
+  stage_16_treant_rooter = "缠根树精",
+  tower_stage_16_treant_killer = "嗜杀树精",
+  tower_stage_16_treant_attacker = "进攻树精",
+  tower_stage_16_treant_healer = "治愈树精",
+  tower_stage_16_treant_rooter = "缠根树精",
+  bullet_stage_16_treant_killer_bomb = "嗜杀树精",
+  bullet_stage_16_treant_attacker_bomb = "进攻树精",
+  aura_stage_16_treant_attacker_bomb_damage = "进攻树精",
+  aura_stage_16_treant_healer_heal = "治愈树精",
+  aura_stage_16_treant_rooter_slow = "缠根树精",
+  mod_stage_16_treant_killer_tangle = "嗜杀树精",
+  mod_stage_16_treant_healer_heal = "治愈树精",
+  mod_stage_16_treant_rooter_slow = "缠根树精",
 }
 
 -- Known tower stems: skill/aura templates must not be treated as heroes.
@@ -288,11 +310,16 @@ local function display_name(cat, key)
       add("SOLDIER_STAGE_08_TEMPLAR_SWORSDMAN_1_NAME")
     end
   elseif cat == "hero" then
+    -- hero_stage_05_alleria → HERO_STAGE_05_ALLERIA_NAME
+    local sn, srest = raw:match("^hero_stage_(%d+)_(.+)$")
+    if sn and srest then
+      add("HERO_STAGE_" .. sn .. "_" .. upper_key(srest) .. "_NAME")
+    end
     local h = raw:match("^hero_(.+)") or raw:match("^ally_(.+)") or raw
     local u = upper_key(h)
     add("HERO_" .. u .. "_NAME")
     add("HERO_" .. u .. "_CLONE_NAME")
-    -- stage heroes e.g. alleria
+    -- bare alleria / denas / lord_blackburn
     add("HERO_STAGE_05_" .. u .. "_NAME")
     add("HERO_STAGE_15_" .. u .. "_NAME")
     add("HERO_STAGE_18_" .. u .. "_NAME")
@@ -350,18 +377,36 @@ local function display_name(cat, key)
   if not fb and raw:find("armory") then fb = i18n("TOWER_STAGE_14_ARMORY_NAME") or "军械库" end
   if not fb and raw:find("blacksmith") then fb = i18n("TOWER_STAGE_14_BLACKSMITH_NAME") or "铁匠铺" end
   if not fb and raw:find("wizard") then fb = i18n("TOWER_WIZARD_NAME") or "魔法学会" end
+  if not fb and raw:find("alleria") then fb = i18n("HERO_STAGE_05_ALLERIA_NAME") or "艾莉瑞雅" end
+  if not fb and raw:find("blackburn") then fb = i18n("HERO_STAGE_15_LORD_BLACKBURN_NAME") or "布莱克本领主" end
+  if not fb and raw:find("denas") then fb = i18n("HERO_STAGE_18_DENAS_NAME") or "迪纳斯王子" end
+  if not fb and raw:find("hero_stage") then fb = "关卡英雄" end
+  if not fb and raw:find("treant_killer") then fb = "嗜杀树精" end
+  if not fb and raw:find("treant_attacker") then fb = "进攻树精" end
+  if not fb and raw:find("treant_healer") then fb = "治愈树精" end
+  if not fb and raw:find("treant_rooter") then fb = "缠根树精" end
+  if not fb and raw:find("stage_%d+_treant") then fb = "关卡树精" end
   -- last resort: if still ascii template, try parent token as tower/hero
   if not fb and raw:match("^[a-z0-9_]+$") then
     local base = raw:match("^aura_([a-z0-9]+)_") or raw:match("^bullet_([a-z0-9]+)_")
-        or raw:match("^mod_([a-z0-9]+)_") or raw:match("^hero_([a-z0-9]+)")
+        or raw:match("^mod_([a-z0-9]+)_") or raw:match("^(hero_stage_%d+_[a-z0-9_]+)")
+        or raw:match("^hero_([a-z0-9]+)")
         or raw:match("^([a-z][a-z0-9]*)_skill")
         or raw:match("^(stage_%d+_[a-z0-9_]+)")
         or raw:gsub("_basic$", ""):gsub("_ult$", ""):gsub("_lvl%d+.*$", "")
     if base then
-      fb = i18n("TOWER_" .. upper_key(base) .. "_NAME")
-        or i18n("HERO_" .. upper_key(base) .. "_NAME")
-        or i18n("POWER_" .. upper_key(base) .. "_NAME")
-        or i18n("SOLDIER_" .. upper_key(base) .. "_1_NAME")
+      local b = base:gsub("^hero_", "")
+      local sn, srest = base:match("^hero_stage_(%d+)_(.+)$")
+      if sn and srest then
+        fb = i18n("HERO_STAGE_" .. sn .. "_" .. upper_key(srest) .. "_NAME")
+      end
+      if not fb then
+        fb = i18n("TOWER_" .. upper_key(base) .. "_NAME")
+          or i18n("HERO_" .. upper_key(b) .. "_NAME")
+          or i18n("HERO_" .. upper_key(base) .. "_NAME")
+          or i18n("POWER_" .. upper_key(base) .. "_NAME")
+          or i18n("SOLDIER_" .. upper_key(base) .. "_1_NAME")
+      end
     end
   end
   if fb then
@@ -409,9 +454,22 @@ local function normalize_tower_key(e)
   return clean_tower_type(n) or n:gsub("_lvl%d+.*$", ""):gsub("_level_%d+.*$", ""):gsub("_kr1$", "")
 end
 
+-- hero_stage_05_alleria 含下划线；旧正则 hero_[a-z0-9]+ 会截成 hero_stage
+local function extract_hero_key(n)
+  n = tostring(n or "")
+  local core = n:match("^bullet_(.+)$") or n:match("^aura_(.+)$") or n:match("^mod_(.+)$") or n
+  local stage = core:match("^(hero_stage_%d+_[a-z0-9_]+)")
+  if stage then
+    stage = stage:gsub("_skill.*$", ""):gsub("_ult.*$", ""):gsub("_clone.*$", "")
+        :gsub("_attack.*$", ""):gsub("_basic.*$", "")
+    return stage
+  end
+  return core:match("^(hero_[a-z0-9]+)")
+end
+
 local function normalize_hero_key(e)
   local n = tostring(e.template_name or "hero")
-  return n:match("^(hero_[a-z0-9]+)") or n
+  return extract_hero_key(n) or n
 end
 
 local function normalize_spell_key(e)
@@ -431,13 +489,20 @@ local function classify_template(name)
   if n == "" then return nil end
   if n:find("^enemy_") then return "skip_enemy", n end
 
-  -- Enemy projectiles: bullet_shadow_archer → ENEMY_SHADOW_ARCHER_NAME
+  -- Enemy projectiles / auras / mods:
+  -- bullet_shadow_archer / aura_dark_sapper_death_explosion / mod_swamp_husk_poison
   do
-    local after = n:match("^bullet_(.+)$")
-    if after and not after:find("^power_") then
-      local eu = upper_key(after)
-      if i18n("ENEMY_" .. eu .. "_NAME") then
-        return "skip_enemy", after
+    local after = n:match("^bullet_(.+)$") or n:match("^aura_(.+)$") or n:match("^mod_(.+)$")
+    if after and not after:find("^power_") and not after:find("^tower_") and not after:find("^hero_") then
+      local parts = {}
+      for part in after:gmatch("[a-z0-9]+") do parts[#parts + 1] = part end
+      local maxn = #parts
+      if maxn > 6 then maxn = 6 end
+      for len = maxn, 1, -1 do
+        local cand = table.concat(parts, "_", 1, len)
+        if i18n("ENEMY_" .. upper_key(cand) .. "_NAME") then
+          return "skip_enemy", cand
+        end
       end
     end
   end
@@ -466,8 +531,16 @@ local function classify_template(name)
     local ctrl = n:match("^controller_stage_%d+_([a-z0-9]+)")
     if ctrl then return "hero", "hero_" .. ctrl end
   end
+  -- 第16关树精盟友（须先于 stage_*damage 关卡机制判断）
+  do
+    local role = n:match("stage_16_treant_(killer|attacker|healer|rooter)")
+    if role then
+      return "tower", "stage_16_treant_" .. role
+    end
+  end
   -- Stage props / hazards: aura_pillar_stage_09_damage → 关卡机制
-  if n:find("pillar_stage") or n:find("^aura_pillar") or n:match("stage_%d+.*damage") then
+  if n:find("pillar_stage") or n:find("^aura_pillar")
+     or (n:match("stage_%d+.*damage") and not n:find("treant")) then
     return "other", "stage_hazard"
   end
   -- broken_stage_08 / tower_broken → 毁损塔
@@ -477,8 +550,12 @@ local function classify_template(name)
   -- stage special towers: stage_14_armory / tower_stage_14_armory
   do
     local st = n:match("^tower_(stage_%d+_[a-z0-9_]+)") or n:match("^(stage_%d+_[a-z0-9_]+)")
+        or n:match("^bullet_(stage_%d+_[a-z0-9_]+)") or n:match("^aura_(stage_%d+_[a-z0-9_]+)")
+        or n:match("^mod_(stage_%d+_[a-z0-9_]+)")
     if st then
       st = st:gsub("_lvl%d+.*$", ""):gsub("_level_%d+.*$", "")
+          :gsub("_bomb.*$", ""):gsub("_heal.*$", ""):gsub("_slow.*$", "")
+          :gsub("_tangle.*$", ""):gsub("_damage.*$", "")
       if st:find("templar") then
         if st:find("archer") then return "hero", "ally_templar_archer" end
         return "hero", "ally_templar_swordsman"
@@ -502,7 +579,7 @@ local function classify_template(name)
     end
   end
 
-  local hero = n:match("^(hero_[a-z0-9]+)") or n:match("^bullet_(hero_[a-z0-9]+)")
+  local hero = extract_hero_key(n)
   if hero then return "hero", hero end
 
   -- bullet_drakkan_clone / bullet_nivus_magic_missiles / bullet_bolin_xxx → hero_<name>
@@ -556,7 +633,7 @@ local function classify_template(name)
       return "hero", "hero_" .. aura_hero
     end
   end
-  local hero_from_aura = n:match("^aura_(hero_[a-z0-9]+)") or n:match("^mod_(hero_[a-z0-9]+)")
+  local hero_from_aura = extract_hero_key(n:match("^aura_(.+)$") or n:match("^mod_(.+)$") or "")
   if hero_from_aura then return "hero", hero_from_aura end
   hero_from_aura = n:match("^aura_([a-z0-9]+)_skill") or n:match("^aura_([a-z0-9]+)_ult")
       or n:match("^mod_([a-z0-9]+)_skill")
@@ -736,6 +813,9 @@ local function migrate_stat_keys()
     { "other", "mod_bullet_power_rain_of_fire_burn", "spell", "power_rain_of_fire" },
     { "other", "aura_pillar_stage_09_damage", "other", "stage_hazard" },
     { "tower", "reinforcement_base", "spell", "power_reinforcements" },
+    { "other", "aura_stage_16_treant_attacker_bomb_damage", "tower", "stage_16_treant_attacker" },
+    { "other", "bullet_stage_16_treant_killer_bomb", "tower", "stage_16_treant_killer" },
+    { "other", "mod_stage_16_treant_killer_tangle", "tower", "stage_16_treant_killer" },
   }
   for i = 1, #moves do
     local fc, fk, tc, tk = moves[i][1], moves[i][2], moves[i][3], moves[i][4]
@@ -750,6 +830,37 @@ local function migrate_stat_keys()
       if not S.hits[tc] then S.hits[tc] = {} end
       S.totals[tc][tk] = (S.totals[tc][tk] or 0) + amt
       S.hits[tc][tk] = (S.hits[tc][tk] or 0) + hits
+    end
+  end
+  -- 敌方光环/修正不应留在【其他】
+  do
+    local drop = {
+      "aura_dark_sapper_death_explosion",
+      "mod_swamp_husk_poison",
+      "bullet_shadow_archer",
+      "bullet_dark_sapper",
+    }
+    local ot = S.totals.other
+    local oh = S.hits.other
+    if type(ot) == "table" then
+      for i = 1, #drop do
+        local k = drop[i]
+        if ot[k] then
+          S.skipped_enemy = (S.skipped_enemy or 0) + 1
+          ot[k] = nil
+          if type(oh) == "table" then oh[k] = nil end
+        end
+      end
+      -- 扫一遍：仍是英文敌方模板的 other key 也清掉
+      local kill = {}
+      for k, _ in pairs(ot) do
+        local hc = classify_template(tostring(k))
+        if hc == "skip_enemy" then kill[#kill + 1] = k end
+      end
+      for i = 1, #kill do
+        ot[kill[i]] = nil
+        if type(oh) == "table" then oh[kill[i]] = nil end
+      end
     end
   end
 end
